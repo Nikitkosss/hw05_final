@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Об авторе проекта{% endblock title %}
+{% block content %}
+  <div class="container py-5">
+    <h1>Привет, меня зовут Никита.</h1>
+    <p>
+    {% load static %}
+    <img hspace="10" vspace="10" align="left" src="{% static 'img/my_photo.png' %}" width="350" height="300" class="d-inline-block align-top" alt="">
+    К изучения программирования меня сподвиг технологический прогресс, машин лернинг, дата саинс там всякий. Круто это, тоже хочу участвовать в развитии.
+    Вот и начал изучать. На яндекс практикуме, мое первое знакомство с программированием, до этого я просто искал себя :)
+    <a href='https://github.com/settings/appearance'>Ссылка на мой GitHub с учебными проектами.<a>
+    Правда большая часть из них закрыта.
+    </p><br><br><br><br><br><br><br><br>
+  </div>
+{% endblock content %}
