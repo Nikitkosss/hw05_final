@@ -2,9 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_page
-
 from posts.forms import CommentForm, PostForm
-from posts.models import Comment, Group, Post, User, Follow
+from posts.models import Comment, Follow, Group, Post, User
+
 from yatube.settings import FIRST_TEN_VALUE
 
 
@@ -21,7 +21,10 @@ def get_page_context(all_posts, request):
 
 @cache_page(20, cache='default', key_prefix='index_page')
 def index(request):
-    context = get_page_context(Post.objects.all(), request)
+    context = get_page_context(
+        Post.objects.select_related('author', 'group').all(),
+        request,
+    )
     return render(request, 'posts/index.html', context)
 
 
@@ -36,7 +39,13 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    following = author.following.exists()
+    following = (
+        request.user.is_authenticated
+        and Follow.objects.filter(
+            user=request.user,
+            author=author,
+        ).exists()
+    )
     context = {
         'author': author,
         "following": following,
@@ -130,5 +139,5 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    Follow.objects.get(user=request.user, author=author).delete()
+    get_object_or_404(Follow, author=author).delete()
     return redirect("posts:follow_index")

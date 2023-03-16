@@ -4,8 +4,9 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from yatube.settings import FIRST_TEN_VALUE
+from ..models import Comment, Follow, Group, Post, User
 
-from ..models import Comment, Group, Post, User, Follow
+first_id = 1
 
 
 class PostPagesTests(TestCase):
@@ -166,10 +167,14 @@ class PostPagesTests(TestCase):
         """Проверка кеша."""
         response = self.client.get(reverse("posts:index"))
         first_response = response.content
-        Post.objects.get(id=1).delete()
+        Post.objects.get(id=first_id).delete()
         response2 = self.client.get(reverse("posts:index"))
         second_response = response2.content
         self.assertEqual(first_response, second_response)
+        cache.clear()
+        response3 = self.client.get(reverse("posts:index"))
+        third_response = response3.content
+        self.assertNotEqual(second_response, third_response)
 
     def test_follow_page(self):
         # Проверяем, что страница подписок пуста
@@ -192,3 +197,49 @@ class PostPagesTests(TestCase):
         Follow.objects.all().delete()
         response_3 = self.authorized_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(response_3.context["page_obj"]), 0)
+
+
+class FollowViewTestCase(TestCase):
+    """Тест модели Follow."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Создаем пост и клиент."""
+        super().setUpClass()
+        cls.author = User.objects.create_user(username="following")
+        cls.post = Post.objects.create(
+            text="Тестовый текст",
+            author=cls.author,
+        )
+        cls.user = User.objects.create_user(username="follower")
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+
+    def test_follow(self):
+        befor_user = Follow.objects.filter(user=self.user)
+        befor_author = Follow.objects.filter(author=self.author)
+        self.assertEqual(befor_user.count(), 0)
+        self.assertEqual(befor_author.count(), 0)
+        self.authorized_client.post(reverse(
+            "posts:profile_follow",
+            kwargs={"username": self.author.username}))
+        after_user = Follow.objects.filter(user=self.user)
+        after_author = Follow.objects.filter(author=self.author)
+        self.assertEqual(after_user.count(), 1)
+        self.assertEqual(after_author.count(), 1)
+
+    def test_unfollow(self):
+        self.authorized_client.post(reverse(
+            "posts:profile_follow",
+            kwargs={"username": self.author.username}))
+        befor_user = Follow.objects.filter(user=self.user)
+        befor_author = Follow.objects.filter(author=self.author)
+        self.assertEqual(befor_user.count(), 1)
+        self.assertEqual(befor_author.count(), 1)
+        self.authorized_client.post(reverse(
+            "posts:profile_unfollow",
+            kwargs={"username": self.author.username}))
+        after_user = Follow.objects.filter(user=self.user)
+        after_author = Follow.objects.filter(author=self.author)
+        self.assertEqual(after_user.count(), 0)
+        self.assertEqual(after_author.count(), 0)

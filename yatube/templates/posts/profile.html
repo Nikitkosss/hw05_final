@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% load thumbnail %}
-{% block title %}Профайл пользователя {{ author.get_full_name }}{% endblock title %}
+{% block title %}Профайл пользователя {{ author.username }}{% endblock title %}
 {% block content %}
 <div class=="mb-5">        
-  <h2>Все посты пользователя {{ author.get_full_name }} </h2>
+  <h2>Все посты пользователя {{ author.username }} </h2>
   <h3>Всего постов: {{ author.posts.count }}</h3>
-  {% if following %}
+  {% if request.author.is_authenticated and request.author != profile.author %}
     <a
       class="btn btn-lg btn-light"
       href="{% url 'posts:profile_unfollow' author.username %}" role="button"
     >
-      Отписаться
+      Отписаться от {{ author.username }}
     </a>
   {% else %}
       <a
         class="btn btn-lg btn-primary"
         href="{% url 'posts:profile_follow' author.username %}" role="button"
       >
-        Подписаться
+        Подписаться на {{ author.username }}
       </a>
   {% endif %} 
   {% for post in page_obj %}
     <article>
     <ul>
       <li>
-        Автор: {{ author.get_full_name }}
+        Автор: {{ author.username }}
       </li>
       <li>
         Дата публикации: {{ post.pub_date|date:"d E Y" }}

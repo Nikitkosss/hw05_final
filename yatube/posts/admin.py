@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from posts.models import Group, Post
 
 
@@ -14,4 +13,7 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    ...
+    list_display = ("pk", "title", "slug", "description")
+    search_fields = ("title",)
+    list_filter = ("slug",)
+    empty_value_display = "-пусто-"
