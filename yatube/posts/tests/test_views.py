@@ -6,14 +6,13 @@ from django.urls import reverse
 from yatube.settings import FIRST_TEN_VALUE
 from ..models import Comment, Follow, Group, Post, User
 
-first_id = 1
-
 
 class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create(username="Nikita")
+        cls.author = User.objects.create_user(username="following")
+        cls.user = User.objects.create_user(username="follower")
         cls.group = Group.objects.create(
             title="Тестовая группа",
             slug="test-slug",
@@ -21,7 +20,7 @@ class PostPagesTests(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text="Тестовая пост",
+            text="Тестовый текст",
             group=cls.group,
         )
         cls.templates_pages_names = {
@@ -167,7 +166,7 @@ class PostPagesTests(TestCase):
         """Проверка кеша."""
         response = self.client.get(reverse("posts:index"))
         first_response = response.content
-        Post.objects.get(id=first_id).delete()
+        Post.objects.first().delete()
         response2 = self.client.get(reverse("posts:index"))
         second_response = response2.content
         self.assertEqual(first_response, second_response)
@@ -198,42 +197,17 @@ class PostPagesTests(TestCase):
         response_3 = self.authorized_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(response_3.context["page_obj"]), 0)
 
-
-class FollowViewTestCase(TestCase):
-    """Тест модели Follow."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Создаем пост и клиент."""
-        super().setUpClass()
-        cls.author = User.objects.create_user(username="following")
-        cls.post = Post.objects.create(
-            text="Тестовый текст",
-            author=cls.author,
+    def test_follow_and_unfollow(self):
+        Follow.objects.all().delete()
+        Follow.objects.create(user=self.user, author=self.author)
+        befor_user = Follow.objects.filter(user=self.user)
+        befor_author = Follow.objects.filter(author=self.author)
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author
+            ).exists()
         )
-        cls.user = User.objects.create_user(username="follower")
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
-
-    def test_follow(self):
-        befor_user = Follow.objects.filter(user=self.user)
-        befor_author = Follow.objects.filter(author=self.author)
-        self.assertEqual(befor_user.count(), 0)
-        self.assertEqual(befor_author.count(), 0)
-        self.authorized_client.post(reverse(
-            "posts:profile_follow",
-            kwargs={"username": self.author.username}))
-        after_user = Follow.objects.filter(user=self.user)
-        after_author = Follow.objects.filter(author=self.author)
-        self.assertEqual(after_user.count(), 1)
-        self.assertEqual(after_author.count(), 1)
-
-    def test_unfollow(self):
-        self.authorized_client.post(reverse(
-            "posts:profile_follow",
-            kwargs={"username": self.author.username}))
-        befor_user = Follow.objects.filter(user=self.user)
-        befor_author = Follow.objects.filter(author=self.author)
         self.assertEqual(befor_user.count(), 1)
         self.assertEqual(befor_author.count(), 1)
         self.authorized_client.post(reverse(
@@ -241,5 +215,11 @@ class FollowViewTestCase(TestCase):
             kwargs={"username": self.author.username}))
         after_user = Follow.objects.filter(user=self.user)
         after_author = Follow.objects.filter(author=self.author)
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author
+            ).exists()
+        )
         self.assertEqual(after_user.count(), 0)
         self.assertEqual(after_author.count(), 0)
