@@ -136,12 +136,20 @@ class PostFormTests(TestCase):
         self.assertEqual(obj.image, self.post.image)
 
     def test_image_in_page(self):
-        self.assertTrue(
-            Post.objects.filter(
-                text="Тестовый текст",
-                image="posts/small.gif",
-            ).exists()
+        """Проверяем что создается пост с картинкой"""
+        posts_count = Post.objects.count()
+        form_data = {"image": "posts/small.gif", "text": "Введите текст"}
+        response = self.authorized_client.post(
+            reverse("posts:post_create"), data=form_data, follow=True
         )
+        self.assertRedirects(
+            response, reverse(
+                "posts:profile",
+                kwargs={"username": self.user.username})
+        )
+        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertTrue(Post.objects.filter(image=form_data["image"]).exists())
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_comments(self):
         test_comment = Comment.objects.count()
