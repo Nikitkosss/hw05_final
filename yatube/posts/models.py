@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-# from django.db.models import UniqueConstraint
 
 from yatube.settings import FIRST_FIFTEEN_VALUE
+
 
 User = get_user_model()
 

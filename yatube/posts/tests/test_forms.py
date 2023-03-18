@@ -8,8 +8,8 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from yatube.settings import USER_NAME
-from ..models import Comment, Group, Post, User
 
+from ..models import Comment, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -136,7 +136,6 @@ class PostFormTests(TestCase):
         self.assertEqual(obj.image, self.post.image)
 
     def test_image_in_page(self):
-        """Проверяем наличие текста и картинки"""
         self.assertTrue(
             Post.objects.filter(
                 text="Тестовый текст",

@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from yatube.settings import FIRST_TEN_VALUE
+
 from ..models import Comment, Follow, Group, Post, User
 
 
@@ -197,29 +198,33 @@ class PostPagesTests(TestCase):
         response_3 = self.authorized_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(response_3.context["page_obj"]), 0)
 
-    def test_follow_and_unfollow(self):
+    def test_unfollow(self):
         Follow.objects.all().delete()
         Follow.objects.create(user=self.user, author=self.author)
-        befor_user = Follow.objects.filter(user=self.user)
-        befor_author = Follow.objects.filter(author=self.author)
-        self.assertTrue(
-            Follow.objects.filter(
-                user=self.user,
-                author=self.author
-            ).exists()
-        )
-        self.assertEqual(befor_user.count(), 1)
-        self.assertEqual(befor_author.count(), 1)
         self.authorized_client.post(reverse(
             "posts:profile_unfollow",
             kwargs={"username": self.author.username}))
-        after_user = Follow.objects.filter(user=self.user)
-        after_author = Follow.objects.filter(author=self.author)
         self.assertFalse(
             Follow.objects.filter(
                 user=self.user,
                 author=self.author
             ).exists()
         )
-        self.assertEqual(after_user.count(), 0)
-        self.assertEqual(after_author.count(), 0)
+
+    def test_follow(self):
+        Follow.objects.all().delete()
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author
+            ).exists()
+        )
+        self.authorized_client.post(reverse(
+            "posts:profile_follow",
+            kwargs={"username": self.author.username}))
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.author
+            ).exists()
+        )
