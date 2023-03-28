@@ -5,13 +5,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = '!u_pyj560^rx!3iw&!1g@p6s=8rrx9e35ee0(fmu6=*yq_wf&('
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '[::1]',
     'testserver',
+    'www.nikitkosss.pythonanywhere.com',
+    'nikitkosss.pythonanywhere.com',
 ]
 
 INSTALLED_APPS = [
@@ -59,7 +61,7 @@ TEMPLATES = [
     },
 ]
 
-STATICFILES_DIRS = [BASE_DIR.joinpath('static')]
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 WSGI_APPLICATION = 'yatube.wsgi.application'
 
